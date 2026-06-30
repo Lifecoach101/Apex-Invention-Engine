@@ -13,7 +13,7 @@ def check_password():
         return True
 
     password = st.text_input("Enter Private Access Key", type="password")
-    if password == hrk2939Ppr13526!!#:  # <--- Yahan apna secret password paste kar dein
+    if password == "hrk2939Ppr13526!!#":  # <--- Yahan apna secret password paste kar dein
         st.session_state.password_correct = True
         st.rerun()
     elif password:
