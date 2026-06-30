@@ -8,12 +8,10 @@ st.set_page_config(page_title="Apex Invention Engine", page_icon="💡")
 def check_password():
     if "password_correct" not in st.session_state:
         st.session_state.password_correct = False
-
     if st.session_state.password_correct:
         return True
-
     password = st.text_input("Enter Private Access Key", type="password")
-    if password == "hrk2939Ppr13526!!#":  # <--- Yahan apna secret password paste kar dein
+    if password == "hrk2939Ppr13526!!#":
         st.session_state.password_correct = True
         st.rerun()
     elif password:
@@ -27,49 +25,39 @@ def main():
     api_key = st.text_input("Enter Groq API Key", type="password")
 
     if api_key:
-        try:
-            client = Groq(api_key=api_key)
-            challenge = st.text_area("Describe the problem you want to solve or the product you want to invent:")
-            
-            if st.button("Generate Invention"):
-                if not challenge:
-                    st.warning("Please describe your challenge first.")
-                else:
-                    # The ROOTING Methodology Prompt
-                    system_prompt = """
-                    You are the 'Apex Invention Engine'. Your methodology is 'ROOTING':
-                    
-                    1. ROOT ANALYSIS (The Asal): Deconstruct the problem to its absolute root. Ignore symptoms, focus on the cause.
-                    2. MINIMALIST EFFICIENCY: Solve the problem using the least energy/resources. Prioritize micro-solutions over macro-complexities.
-                    3. MODULAR ADAPTATION: Ensure the invention is scalable and adaptable for different environments (e.g., resource-poor vs. resource-rich).
-                    4. DUALITY: Always consider how the invention can provide multi-functional utility (e.g., heating/cooling, financial/social).
-                    5. INNOVATION LOGIC: Use First Principles to recombine existing technologies in unconventional, 'Asli' ways.
+        client = Groq(api_key=api_key)
 
-                    OUTPUT FORMAT:
-                    ### ROOT ANALYSIS (The Asal)
-                    [Breakdown of the core problem]
-                    
-                    ### MINIMALIST SOLUTION
-                    [The leanest technical approach]
-                    
-                    ### MODULAR ARCHITECTURE
-                    [How it adapts to different environments]
-                    
-                    ### IMPLEMENTATION (Step-by-Step)
-                    [Actionable development roadmap]
-                    """
-                    
-                    with st.spinner("Applying ROOTING methodology to your invention..."):
-                        chat_completion = client.chat.completions.create(
-                            messages=[
-                                {"role": "system", "content": system_prompt}, 
-                                {"role": "user", "content": challenge}
-                            ],
-                            model="llama-3.1-8b-instant", 
-                        )
-                        st.markdown(chat_completion.choices[0].message.content)
-        except Exception as e:
-            st.error(f"An error occurred: {e}")
+        # Initialize chat history
+        if "messages" not in st.session_state:
+            st.session_state.messages = [
+                {"role": "system", "content": "You are the 'Apex Invention Engine'. Your methodology is 'ROOTING': 1. ROOT ANALYSIS, 2. MINIMALIST EFFICIENCY, 3. MODULAR ADAPTATION, 4. DUALITY, 5. INNOVATION LOGIC. Always maintain this persona."}
+            ]
+
+        # Display chat history
+        for message in st.session_state.messages:
+            if message["role"] != "system":
+                with st.chat_message(message["role"]):
+                    st.markdown(message["content"])
+
+        # Chat Input
+        if prompt := st.chat_input("Describe your problem or invention idea..."):
+            # Add user message to history
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.markdown(prompt)
+
+            # Generate response
+            with st.chat_message("assistant"):
+                with st.spinner("Thinking..."):
+                    stream = client.chat.completions.create(
+                        messages=st.session_state.messages,
+                        model="llama-3.1-8b-instant",
+                    )
+                    response = stream.choices[0].message.content
+                    st.markdown(response)
+            
+            # Add assistant response to history
+            st.session_state.messages.append({"role": "assistant", "content": response})
 
 if __name__ == "__main__":
     if check_password():
